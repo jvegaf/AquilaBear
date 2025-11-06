@@ -1,0 +1,50 @@
+name: Release CI
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    name: Create Release with Artifact
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Package printer_data module
+        run: |
+          # Create a zip archive of the printer_data directory
+          zip -r klipper-config-${{ github.ref_name }}.zip printer_data/
+          echo "Created archive: klipper-config-${{ github.ref_name }}.zip"
+          ls -lh klipper-config-${{ github.ref_name }}.zip
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: klipper-config-${{ github.ref_name }}.zip
+          name: Release ${{ github.ref_name }}
+          body: |
+            ## Klipper Configuration Release ${{ github.ref_name }}
+            
+            This release contains the Klipper printer configuration for AquilaBear.
+            
+            ### Contents
+            - printer.cfg - Main printer configuration
+            - macros.cfg - Custom macros
+            - moonraker.conf - Moonraker configuration
+            - sonar.conf - Sonar configuration
+            - crowsnest.conf - Crowsnest camera configuration
+            
+            ### Installation
+            1. Download the `klipper-config-${{ github.ref_name }}.zip` file
+            2. Extract to your printer's configuration directory
+            3. Review and adjust settings as needed for your setup
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
